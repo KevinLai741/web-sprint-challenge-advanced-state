@@ -10,6 +10,10 @@ import {
   RESET_FORM
 } from "./action-types"
 
+import axios from "axios"
+
+const URL = 'http://localhost:9000/api/quiz'
+
 export function moveClockwise() { 
   return { type: MOVE_CLOCKWISE }
 }
@@ -41,24 +45,48 @@ export function resetForm() {
 // ❗ Async action creators
 export function fetchQuiz() {
   return function (dispatch) {
-    // First, dispatch an action to reset the quiz state (so the "Loading next quiz..." message can display)
-    // On successful GET:
-    // - Dispatch an action to send the obtained quiz to its state
+    dispatch(setQuiz(null))
+    axios.get(`${URL}/next`)
+      .then(response => {
+        dispatch(setQuiz(response.data))
+      })
+      .catch(err => {
+        console.error(err)
+        dispatch(setMessage(err.message))
+      })
   }
 }
-export function postAnswer() {
+export function postAnswer(quiz_id, answer_id) {
   return function (dispatch) {
-    // On successful POST:
-    // - Dispatch an action to reset the selected answer state
-    // - Dispatch an action to set the server message to state
-    // - Dispatch the fetching of the next quiz
+    axios.post(`${URL}/answer`, { quiz_id, answer_id })
+      .then(response => {
+        dispatch(selectAnswer(null))
+        dispatch(setMessage(response.data.message))
+        dispatch(fetchQuiz())
+      })
+      .catch(err => {
+        console.error(err)
+        dispatch(setMessage(err.message))
+      })
   }
 }
-export function postQuiz() {
+export function postQuiz(form) {
   return function (dispatch) {
-    // On successful POST:
-    // - Dispatch the correct message to the the appropriate state
-    // - Dispatch the resetting of the form
+    const payload = { 
+      question_text: form.newQuestion,
+      true_answer_text: form.newTrueAnswer,
+      false_answer_text: form.newFalseAnswer
+     }
+    axios.post(`${URL}/new`, payload)
+    .then(response => {
+      dispatch(setMessage(`Congrats: "${response.data.question}" is a great question!`))
+      dispatch(resetForm())
+    })
+    .catch(err => {
+      console.log(err)
+      dispatch(setMessage(err.message))
+    })
+    
   }
 }
 // ❗ On promise rejections, use log statements or breakpoints, and put an appropriate error message in state
