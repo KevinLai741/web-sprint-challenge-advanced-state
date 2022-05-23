@@ -1,53 +1,74 @@
-import React, { useEffect } from 'react'
+// ❗ You don't need to add extra reducers to achieve MVP
+import { combineReducers } from 'redux'
+//import action creators:
+import { 
+  MOVE_CLOCKWISE, 
+  MOVE_COUNTERCLOCKWISE,
+  SET_QUIZ_INTO_STATE,
+  SET_SELECTED_ANSWER,
+  SET_INFO_MESSAGE,
+  INPUT_CHANGE,
+  RESET_FORM
+} from "./action-types"
 
-import { connect } from 'react-redux'
-import * as actionCreators from '../state/action-creators'
-
-export function Quiz(props) {
-  const { quiz, selectedAnswer, fetchQuiz, selectAnswer, postAnswer } = props
-
-  useEffect(() => {
-    !quiz && fetchQuiz()
-  }, [])
-
-  const selectHandler = id => {
-    selectAnswer(id)
+const initialWheelState = 0
+function wheel(state = initialWheelState, action) {
+  const totalWheels = 6
+  switch (action.type) {
+    case MOVE_CLOCKWISE:
+      return (state + 1) % totalWheels
+    case MOVE_COUNTERCLOCKWISE:
+      return state === 0 ? totalWheels - 1 : state - 1
+    default:
+      return state
   }
-
-  const submitHandler = () => {
-    postAnswer(quiz.quiz_id, selectedAnswer)
-  }
-
-  return (
-    <div id="wrapper">
-      { 
-        quiz ? 
-          <>
-            <h2>{quiz.question}</h2>
-
-            <div id="quizAnswers">
-              {
-                quiz.answers.map(answer => 
-                  <div className={answer.answer_id === selectedAnswer ? "answer selected" : "answer"} onClick={() => selectHandler(answer.answer_id)} key={answer.answer_id}>
-                      {answer.text}
-                      <button>{answer.answer_id === selectedAnswer ? "SELECTED" : "Select"}</button>
-                  </div>
-                )
-              }
-            </div>
-            <button id="submitAnswerBtn" disabled={!selectedAnswer} onClick={submitHandler}>Submit answer</button>
-          </>
-         : 'Loading next quiz...'
-      }
-    </div>
-  )
 }
 
-const mapStateToProps = state => {
-  return { 
-    quiz: state.quiz,
-    selectedAnswer: state.selectedAnswer
-   }
+const initialQuizState = null
+function quiz(state = initialQuizState, action) {
+  switch (action.type) {
+    case SET_QUIZ_INTO_STATE:
+      return action.payload
+    default:
+      return state
+  }
 }
 
-export default connect(mapStateToProps, actionCreators)(Quiz)
+const initialSelectedAnswerState = null
+function selectedAnswer(state = initialSelectedAnswerState, action) {
+  switch (action.type) {
+    case SET_SELECTED_ANSWER:
+      return action.payload
+    default:
+      return state
+  }
+}
+
+const initialMessageState = ''
+function infoMessage(state = initialMessageState, action) {
+  switch (action.type) {
+    case SET_INFO_MESSAGE:
+      return action.payload
+    default:
+      return state
+  }
+}
+
+const initialFormState = {
+  newQuestion: '',
+  newTrueAnswer: '',
+  newFalseAnswer: '',
+}
+function form(state = initialFormState, action) {
+  switch (action.type) {
+    case INPUT_CHANGE:
+      return {...state, [action.payload.id]: action.payload.value }
+    case RESET_FORM:
+      return initialFormState
+    default:
+      return state
+  }
+}
+
+
+export default combineReducers({ wheel, quiz, selectedAnswer, infoMessage, form })

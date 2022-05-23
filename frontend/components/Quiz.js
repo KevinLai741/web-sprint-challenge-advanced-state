@@ -20,7 +20,7 @@ export function Quiz(props) {
 
   return (
     <div id="wrapper">
-      {
+      { // quiz already in state? Let's use that, otherwise render "Loading next quiz..."
         quiz ? 
           <>
             <h2>{quiz.question}</h2>
@@ -51,4 +51,3 @@ const mapStateToProps = state => {
 }
 
 export default connect(mapStateToProps, actionCreators)(Quiz)
-
